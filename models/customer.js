@@ -80,8 +80,19 @@ class Customer {
   }
 
   /** Returns the full name of this customer */
-  fullname() {
+  get fullname(){
     return `${this.firstName} ${this.lastName}`;
+  }
+
+  /** Search all customers and matches input to full name */
+  static async search(name) {
+    const customers = await Customer.all();
+    const results = customers.filter( customer => {
+      if( customer.fullname.toLowerCase().includes(name)){
+        return customer;
+      }
+    });
+    return results;
   }
 }
 
