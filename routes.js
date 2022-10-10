@@ -50,7 +50,8 @@ router.post("/add/", async function (req, res, next) {
 
 router.get("/:id/", async function (req, res, next) {
   try {
-    if(req.params.id === "search"){
+    // if id is not a number, we move on to the next matching route
+    if(isNaN(req.params.id)){
       return next();
     }
     const customer = await Customer.get(req.params.id);
@@ -120,6 +121,16 @@ router.post("/:id/add-reservation/", async function (req, res, next) {
 router.get("/search", async function (req, res, next) {
   try{
     const customers = await Customer.search(req.query.term);
+    return res.render("customer_list.html", { customers });
+  }
+  catch(e){
+    return next(e);
+  }
+});
+
+router.get("/best", async function (req, res, next) {
+  try{
+    const customers = await Customer.best();
     return res.render("customer_list.html", { customers });
   }
   catch(e){

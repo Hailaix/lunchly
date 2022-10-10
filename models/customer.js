@@ -86,14 +86,55 @@ class Customer {
 
   /** Search all customers and matches input to full name */
   static async search(name) {
-    const customers = await Customer.all();
-    const results = customers.filter( customer => {
-      if( customer.fullname.toLowerCase().includes(name)){
-        return customer;
-      }
-    });
-    return results;
+    // const customers = await Customer.all();
+    // const results = customers.filter( customer => {
+    //   if( customer.fullname.toLowerCase().includes(name)){
+    //     return customer;
+    //   }
+    // });
+    // return results;
+
+    /** refactored to move logic to database */
+    
+    //cannot bind inside of quotes, so moved % to the variable
+    const likeName = `%${name}%`;
+    
+    const customers = await db.query(
+      `SELECT id,
+       first_name AS "firstName", 
+       last_name AS "lastName", 
+       phone, notes
+       FROM customers
+       WHERE first_name ILIKE $1
+       OR last_name ILIKE $1`, [likeName]);
+       return customers.rows.map(c => new Customer(c));
   }
+
+  /** returns the ten "best" customers by most reservations */
+  static async best(){
+    const results = await db.query(
+      `SELECT c.id, c.first_name AS "firstName",
+       c.last_name AS "lastName", 
+       c.phone AS "phone", 
+       c.notes AS "notes"
+       FROM customers AS c
+       JOIN reservations AS r
+       ON c.id = r.customer_id
+       GROUP BY c.id
+       ORDER BY COUNT(*) DESC
+       LIMIT 10`
+    );
+    return results.rows.map(c => new Customer(c));
+  }
+
+  /** notes getter/setter */
+  get notes() {
+    return this._notes;
+  }
+  set notes(val) {
+    this._notes = val ? val : '';
+  }
+
 }
 
 module.exports = Customer;
